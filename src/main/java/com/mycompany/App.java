@@ -1,28 +1,34 @@
 package com.mycompany;
 
+import com.typesafe.config.Config;
 import org.jooby.Jooby;
-
-import java.util.List;
-import java.util.Random;
-
-import static java.util.Arrays.asList;
 
 /**
  * @author Paul Hammant DevOps, (c) 2018
  */
 public class App extends Jooby {
 
+  private ReleaseToggles releaseToggles;
+
   {
     get("/color/hair.json", (req, rsp) -> {
       rsp.status(200)
               .type("application/json")
-              .send("{\"color\":\"" + getChangingHairColor() + "\"}");
+              .send("{\"color\":\"" + releaseToggles.getChangingHairColor() + "\"}");
+    });
+
+    onStart(registry -> {
+      withTogglesFor(registry.require(Config.class).getString("ReleaseToggles"));
     });
   }
 
-  private String getChangingHairColor() {
-    List<String> colors = asList("Blonde", "Brown", "Black", "Red");
-    return colors.get(new Random().nextInt(colors.size()));
+  App withTogglesFor(String releaseTogglesClassName) {
+    try {
+      releaseToggles = (ReleaseToggles) Class.forName(releaseTogglesClassName).newInstance();
+      return this;
+    } catch (InstantiationException | IllegalAccessException | ClassNotFoundException e) {
+      throw new UnsupportedOperationException(e);
+    }
   }
 
   public static void main(final String[] args) {
