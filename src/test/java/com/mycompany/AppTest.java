@@ -2,8 +2,6 @@ package com.mycompany;
 
 import org.hamcrest.Matcher;
 import org.hamcrest.core.AnyOf;
-import org.jooby.Request;
-import org.jooby.Response;
 import org.jooby.test.JoobyRule;
 import org.jooby.test.MockRouter;
 import org.junit.ClassRule;
@@ -13,11 +11,9 @@ import static io.restassured.RestAssured.get;
 import static org.hamcrest.Matchers.anyOf;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.endsWith;
+import static org.hamcrest.Matchers.isIn;
 import static org.hamcrest.Matchers.startsWith;
 import static org.junit.Assert.assertThat;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 
 /**
  * @author Paul Hammant DevOps, (c) 2018
@@ -32,10 +28,8 @@ public class AppTest {
   public static JoobyRule app = new JoobyRule(new App());
 
   /**
-   * An service test that uses RestAssured to
-   * check hair color functionality over HTTP (whichever is
-   * configured in conf/application.conf (unless
-   * overridden at launch)
+   * A service test that uses RestAssured to
+   * check hair color functionality over HTTP
    */
   @Test
   public void serviceTest() {
@@ -50,30 +44,11 @@ public class AppTest {
   }
 
   private AnyOf<String> specifiesAnyOfTheAllowedColors() {
-    return anyOf(Arrays.stream(Release4.Color.values())
+    return anyOf(Arrays.stream(Color.values())
             .map(c -> containsString(c.name())).toArray(Matcher[]::new));
   }
 
-  /**
-   * A unit test that checks 'old' stringified
-   * implementation directly (without HTTP or TCP/IP)
-   */
-  @Test
-  public void originalHairColorTest() throws Throwable {
-    Response rsp = mock(Response.class);
-    when(rsp.status(200)).thenReturn(rsp);
-    when(rsp.type("application/json")).thenReturn(rsp);
 
-    String result = new MockRouter(new App().withTogglesFor(Release3.class.getName()),
-            mock(Request.class), rsp)
-            .get("/color/hair.json");
-
-    assertThat(result, startsWith("{\"color\":\""));
-    assertThat(result, endsWith("\"}"));
-    assertThat(result, specifiesAnyOfTheAllowedColors());
-    verify(rsp).type("application/json");
-    verify(rsp).status(200);
-  }
 
   /**
    * A unit test that checks 'new' enum-based
@@ -81,18 +56,11 @@ public class AppTest {
    */
   @Test
   public void newHairColorTest() throws Throwable {
-    Response rsp = mock(Response.class);
-    when(rsp.status(200)).thenReturn(rsp);
-    when(rsp.type("application/json")).thenReturn(rsp);
-
-    String result = new MockRouter(new App().withTogglesFor(Release4.class.getName()),
-            mock(Request.class), rsp)
+    Color color = new MockRouter(new App().withTogglesFor(Release4.class.getName()))
             .get("/color/hair.json");
 
-    assertThat(result, startsWith("{\"color\":\""));
-    assertThat(result, endsWith("\"}"));
-    assertThat(result, specifiesAnyOfTheAllowedColors());
-    verify(rsp).type("application/json");
-    verify(rsp).status(200);
+    // Is an object here, not a JSON string.
+    // an instance of that enum to be specific
+    assertThat(color, isIn(Color.values()));
   }
 }

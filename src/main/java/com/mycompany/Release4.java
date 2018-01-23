@@ -5,25 +5,8 @@ package com.mycompany;
  */
 public class Release4 implements ReleaseToggles {
 
-    enum Color {
+  // nothing scheduled in the release 4 time frame that
+  // would require a Branch By Abstraction procedure to
+  // allow it to be coded over a perid of time
 
-        Blonde(),
-        Brown(),
-        Black(),
-        Red();
-
-        Color() {
-        }
-
-        private static int colorCtr = 0;
-
-        static Color rotatingChoice() {
-            return Color.values()[colorCtr++ % Color.values().length];
-        }
-    }
-
-    @Override
-    public Object getChangingHairColor() {
-        return Color.rotatingChoice();
-    }
 }

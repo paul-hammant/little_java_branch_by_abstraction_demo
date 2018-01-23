@@ -2,6 +2,7 @@ package com.mycompany;
 
 import com.typesafe.config.Config;
 import org.jooby.Jooby;
+import org.jooby.json.Jackson;
 
 /**
  * @author Paul Hammant DevOps, (c) 2018
@@ -11,11 +12,8 @@ public class App extends Jooby {
   private ReleaseToggles releaseToggles;
 
   {
-    get("/color/hair.json", (req, rsp) -> {
-      rsp.status(200)
-              .type("application/json")
-              .send("{\"color\":\"" + releaseToggles.getChangingHairColor() + "\"}");
-    });
+    use(new Jackson());
+    get("/color/hair.json", () -> Color.rotatingChoice());
 
     onStart(registry -> {
       withTogglesFor(registry.require(Config.class).getString("ReleaseToggles"));

@@ -5,6 +5,6 @@ package com.mycompany;
  */
 public interface ReleaseToggles {
 
-    Object getChangingHairColor();
+  // nothing togglable pertient to releases presently
 
 }
