@@ -1,5 +1,6 @@
 package com.mycompany;
 
+import org.hamcrest.Matcher;
 import org.hamcrest.core.AnyOf;
 import org.jooby.Request;
 import org.jooby.Response;
@@ -7,6 +8,7 @@ import org.jooby.test.JoobyRule;
 import org.jooby.test.MockRouter;
 import org.junit.ClassRule;
 import org.junit.Test;
+import java.util.Arrays;
 import static io.restassured.RestAssured.get;
 import static org.hamcrest.Matchers.anyOf;
 import static org.hamcrest.Matchers.containsString;
@@ -30,8 +32,10 @@ public class AppTest {
   public static JoobyRule app = new JoobyRule(new App());
 
   /**
-   * A service test that uses RestAssured to
-   * check hair color functionality over HTTP
+   * An service test that uses RestAssured to
+   * check hair color functionality over HTTP (whichever is
+   * configured in conf/application.conf (unless
+   * overridden at launch)
    */
   @Test
   public void serviceTest() {
@@ -46,21 +50,42 @@ public class AppTest {
   }
 
   private AnyOf<String> specifiesAnyOfTheAllowedColors() {
-    return anyOf(containsString("Blonde"), containsString("Brown"),
-            containsString("Black"), containsString("Red"));
+    return anyOf(Arrays.stream(Release4.Color.values())
+            .map(c -> containsString(c.name())).toArray(Matcher[]::new));
   }
 
   /**
-   * A unit test that checks hair color
-   * functionality without HTTP or TCP/IP
+   * A unit test that checks 'old' stringified
+   * implementation directly (without HTTP or TCP/IP)
    */
   @Test
-  public void unitTest() throws Throwable {
+  public void originalHairColorTest() throws Throwable {
     Response rsp = mock(Response.class);
     when(rsp.status(200)).thenReturn(rsp);
     when(rsp.type("application/json")).thenReturn(rsp);
 
     String result = new MockRouter(new App().withTogglesFor(Release3.class.getName()),
+            mock(Request.class), rsp)
+            .get("/color/hair.json");
+
+    assertThat(result, startsWith("{\"color\":\""));
+    assertThat(result, endsWith("\"}"));
+    assertThat(result, specifiesAnyOfTheAllowedColors());
+    verify(rsp).type("application/json");
+    verify(rsp).status(200);
+  }
+
+  /**
+   * A unit test that checks 'new' enum-based
+   * implementation directly (without HTTP or TCP/IP)
+   */
+  @Test
+  public void newHairColorTest() throws Throwable {
+    Response rsp = mock(Response.class);
+    when(rsp.status(200)).thenReturn(rsp);
+    when(rsp.type("application/json")).thenReturn(rsp);
+
+    String result = new MockRouter(new App().withTogglesFor(Release4.class.getName()),
             mock(Request.class), rsp)
             .get("/color/hair.json");
 

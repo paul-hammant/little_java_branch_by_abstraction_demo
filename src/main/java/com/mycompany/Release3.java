@@ -10,7 +10,7 @@ import static java.util.Arrays.asList;
  */
 public class Release3 implements ReleaseToggles {
     @Override
-    public String getChangingHairColor() {
+    public Object getChangingHairColor() {
         List<String> colors = asList("Blonde", "Brown", "Black", "Red");
         return colors.get(new Random().nextInt(colors.size()));
     }
